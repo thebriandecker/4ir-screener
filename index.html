@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>4IR Screener | The Wealth Society</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg-primary:#080c14;--bg-secondary:#0d1321;--bg-card:#111827;--bg-card-hover:#162032;
+--border:#1e293b;--border-light:#334155;
+--text-primary:#f1f5f9;--text-secondary:#94a3b8;--text-muted:#64748b;
+--green:#10b981;--green-dim:#065f46;--green-bg:rgba(16,185,129,0.08);
+--red:#ef4444;--red-dim:#7f1d1d;--red-bg:rgba(239,68,68,0.08);
+--blue:#3b82f6;--blue-dim:#1e3a5f;--blue-bg:rgba(59,130,246,0.08);
+--amber:#f59e0b;--amber-dim:#78350f;--amber-bg:rgba(245,158,11,0.08);
+--purple:#a855f7;--purple-dim:#581c87;
+--accent:#06b6d4;
+}
+html{font-size:13px}
+body{background:var(--bg-primary);color:var(--text-primary);font-family:'Outfit',sans-serif;min-height:100vh;overflow-x:hidden}
+.mono{font-family:'JetBrains Mono',monospace}
+.header{background:linear-gradient(180deg,#0f1729 0%,var(--bg-primary) 100%);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(20px)}
+.header-left{display:flex;align-items:center;gap:16px}
+.logo{font-size:1.4rem;font-weight:800;letter-spacing:-0.5px;background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-sub{font-size:0.75rem;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase}
+.header-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.header-stat{text-align:right;padding:0 12px;border-right:1px solid var(--border)}
+.header-stat:last-child{border:none;padding-right:0}
+.header-stat-val{font-size:1rem;font-weight:600}
+.header-stat-label{font-size:0.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+.tabs{display:flex;gap:0;background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:0 24px;overflow-x:auto}
+.tab{padding:10px 20px;cursor:pointer;color:var(--text-muted);font-weight:500;font-size:0.85rem;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;user-select:none}
+.tab:hover{color:var(--text-secondary)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.panel{display:none;padding:20px 24px}
+.panel.active{display:block}
+.theme-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-top:12px}
+.theme-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:14px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden}
+.theme-card:hover{border-color:var(--border-light);background:var(--bg-card-hover);transform:translateY(-1px)}
+.theme-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.theme-card.hot::before{background:linear-gradient(90deg,var(--green),var(--green-dim))}
+.theme-card.warm::before{background:linear-gradient(90deg,var(--amber),var(--amber-dim))}
+.theme-card.cold::before{background:linear-gradient(90deg,var(--red),var(--red-dim))}
+.theme-card.neutral::before{background:linear-gradient(90deg,var(--blue),var(--blue-dim))}
+.tc-name{font-weight:700;font-size:0.9rem;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.tc-count{font-size:0.7rem;color:var(--text-muted);background:var(--bg-secondary);padding:2px 6px;border-radius:4px}
+.tc-metrics{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tc-metric{display:flex;flex-direction:column}
+.tc-metric-label{font-size:0.6rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px}
+.tc-metric-val{font-size:0.95rem;font-weight:600;font-family:'JetBrains Mono',monospace}
+.tc-signals{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.tc-signal{font-size:0.6rem;padding:2px 6px;border-radius:3px;font-weight:600}
+.tc-signal.vz{background:var(--green-bg);color:var(--green)}
+.tc-signal.trim{background:var(--red-bg);color:var(--red)}
+.tc-signal.momentum{background:var(--blue-bg);color:var(--blue)}
+.controls{display:flex;align-items:center;gap:12px;padding:12px 0;flex-wrap:wrap}
+.ctrl-group{display:flex;align-items:center;gap:6px}
+.ctrl-label{font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px}
+select,input[type="text"],input[type="password"]{background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);padding:6px 10px;border-radius:6px;font-size:0.8rem;font-family:'Outfit',sans-serif}
+select:focus,input:focus{outline:none;border-color:var(--accent)}
+.btn{padding:7px 14px;border:1px solid var(--border);background:var(--bg-card);color:var(--text-primary);border-radius:6px;cursor:pointer;font-size:0.78rem;font-weight:500;font-family:'Outfit',sans-serif;transition:all 0.15s;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{background:var(--bg-card-hover);border-color:var(--border-light)}
+.btn-accent{background:linear-gradient(135deg,#0891b2,#0e7490);border-color:#0891b2;color:white}
+.btn-accent:hover{background:linear-gradient(135deg,#06b6d4,#0891b2)}
+.btn-sm{padding:4px 8px;font-size:0.7rem}
+.table-wrap{overflow-x:auto;margin-top:8px;border:1px solid var(--border);border-radius:8px}
+table{width:100%;border-collapse:collapse;font-size:0.8rem}
+thead{position:sticky;top:0;z-index:10}
+th{background:var(--bg-secondary);color:var(--text-muted);font-weight:600;font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);cursor:pointer;white-space:nowrap;user-select:none}
+th:hover{color:var(--text-primary)}
+th.sorted-asc::after{content:' ▲';color:var(--accent)}
+th.sorted-desc::after{content:' ▼';color:var(--accent)}
+td{padding:7px 10px;border-bottom:1px solid var(--border);white-space:nowrap;font-family:'JetBrains Mono',monospace;font-size:0.75rem}
+tr{transition:background 0.1s}
+tr:hover{background:var(--bg-card-hover)}
+tr.row-vz{background:var(--green-bg)}
+tr.row-trim{background:var(--red-bg)}
+tr.row-mom{background:var(--blue-bg)}
+.ticker-cell{font-weight:700;color:var(--accent);cursor:pointer;font-size:0.82rem}
+.ticker-cell:hover{text-decoration:underline}
+.stock-name{color:var(--text-muted);font-family:'Outfit',sans-serif;font-size:0.72rem;font-weight:400}
+.pos{color:var(--green)}.neg{color:var(--red)}
+.badge{display:inline-block;padding:1px 5px;border-radius:3px;font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.badge-vz{background:var(--green-bg);color:var(--green)}
+.badge-dvz{background:#065f46;color:#6ee7b7}
+.badge-trim{background:var(--red-bg);color:var(--red)}
+.badge-mom{background:var(--blue-bg);color:var(--blue)}
+.badge-hold{background:var(--amber-bg);color:var(--amber)}
+.badge-watch{background:var(--purple-dim);color:var(--purple)}
+.badge-neutral{background:var(--bg-secondary);color:var(--text-muted)}
+.conv{font-size:0.9rem;font-weight:700;padding:2px 6px;border-radius:4px}
+.conv-hi{background:#065f46;color:#6ee7b7}
+.conv-md{background:var(--amber-dim);color:var(--amber)}
+.conv-lo{background:var(--bg-secondary);color:var(--text-muted)}
+.signal-section{margin-bottom:24px}
+.signal-title{font-size:1rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.signal-title .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.signal-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.signal-card{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.signal-card:hover{background:var(--bg-card-hover)}
+.signal-card-ticker{font-size:1.1rem;font-weight:700;color:var(--accent);min-width:55px}
+.signal-card-info{flex:1}
+.signal-card-reason{font-size:0.72rem;color:var(--text-secondary)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex;align-items:center;justify-content:center}
+.modal{background:var(--bg-secondary);border:1px solid var(--border);border-radius:12px;width:90%;max-width:800px;max-height:85vh;overflow-y:auto;padding:24px;position:relative}
+.modal-close{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--text-muted);font-size:1.5rem;cursor:pointer}
+.modal-close:hover{color:var(--text-primary)}
+.modal-ticker{font-size:1.8rem;font-weight:800;color:var(--accent)}
+.modal-name{color:var(--text-secondary);font-size:0.9rem}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px}
+.modal-section{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px}
+.modal-section-title{font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600}
+.modal-row{display:flex;justify-content:space-between;padding:3px 0;font-size:0.8rem}
+.modal-row-label{color:var(--text-secondary)}
+.modal-row-val{font-family:'JetBrains Mono',monospace;font-weight:500}
+.settings-section{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px}
+.settings-title{font-weight:700;font-size:0.9rem;margin-bottom:10px}
+.settings-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.settings-row label{font-size:0.8rem;color:var(--text-secondary);min-width:120px}
+.settings-row input{flex:1;max-width:400px}
+.api-status{font-size:0.7rem;padding:2px 8px;border-radius:4px}
+.api-ok{background:var(--green-bg);color:var(--green)}
+.api-bad{background:var(--red-bg);color:var(--red)}
+.progress-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin:8px 0}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--blue));transition:width 0.3s;border-radius:2px}
+.status-text{font-size:0.7rem;color:var(--text-muted)}
+.wl-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.wl-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all 0.15s}
+.wl-chip.holding{background:var(--green-bg);color:var(--green);border:1px solid var(--green-dim)}
+.wl-chip.watching{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-dim)}
+.wl-chip.none{background:var(--bg-secondary);color:var(--text-muted);border:1px solid var(--border)}
+#log-box{background:#000;border:1px solid var(--border);border-radius:6px;padding:8px;max-height:200px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--green);margin-top:8px;display:none;white-space:pre-wrap;word-break:break-all}
+#log-box.show{display:block}
+@media(max-width:768px){
+  .header{padding:10px 12px;flex-wrap:wrap;gap:8px}
+  .panel{padding:12px}
+  .theme-grid{grid-template-columns:1fr 1fr}
+  .modal-grid{grid-template-columns:1fr}
+  .controls{flex-direction:column;align-items:flex-start}
+  html{font-size:12px}
+}
+@media(max-width:480px){.theme-grid{grid-template-columns:1fr}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeIn 0.3s ease-out}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg-primary)}
+::-webkit-scrollbar-thumb{background:var(--border-light);border-radius:3px}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-left"><div><div class="logo">4IR SCREENER</div><div class="logo-sub">The Wealth Society</div></div></div>
+  <div class="header-right">
+    <div class="header-stat"><div class="header-stat-val" id="hdr-total">—</div><div class="header-stat-label">Stocks</div></div>
+    <div class="header-stat"><div class="header-stat-val" id="hdr-loaded" style="color:var(--accent)">0</div><div class="header-stat-label">Loaded</div></div>
+    <div class="header-stat"><div class="header-stat-val" id="hdr-vz" style="color:var(--green)">—</div><div class="header-stat-label">Value Zone</div></div>
+    <div class="header-stat"><div class="header-stat-val" id="hdr-trim" style="color:var(--red)">—</div><div class="header-stat-label">Trim</div></div>
+    <div class="header-stat"><div class="header-stat-val" id="hdr-updated">—</div><div class="header-stat-label">Last Scan</div></div>
+  </div>
+</div>
+<div class="tabs">
+  <div class="tab active" data-tab="themes" onclick="switchTab('themes')">◈ Themes</div>
+  <div class="tab" data-tab="scanner" onclick="switchTab('scanner')">◉ Scanner</div>
+  <div class="tab" data-tab="signals" onclick="switchTab('signals')">⚡ Signals</div>
+  <div class="tab" data-tab="holdings" onclick="switchTab('holdings')">◆ Holdings</div>
+  <div class="tab" data-tab="settings" onclick="switchTab('settings')">⚙ Settings</div>
+</div>
+
+<div class="panel active" id="panel-themes">
+  <div class="controls">
+    <button class="btn btn-accent" onclick="scanAll()">⟳ Scan All</button>
+    <button class="btn" onclick="fetchAbort=true">⏹ Stop</button>
+    <div class="ctrl-group"><span class="ctrl-label">Sort:</span>
+      <select id="theme-sort" onchange="renderThemes()">
+        <option value="default">Default</option><option value="perf7d">7-Day</option><option value="perf30d">30-Day</option><option value="signals">Signals</option>
+      </select>
+    </div>
+    <button class="btn btn-sm" onclick="document.getElementById('log-box').classList.toggle('show')">📋 Log</button>
+    <div style="flex:1"></div>
+    <span class="status-text" id="fetch-status"></span>
+  </div>
+  <div class="progress-bar" id="pbar" style="display:none"><div class="progress-fill" id="pfill"></div></div>
+  <div id="log-box"></div>
+  <div class="theme-grid" id="theme-grid"></div>
+</div>
+
+<div class="panel" id="panel-scanner">
+  <div class="controls">
+    <div class="ctrl-group"><span class="ctrl-label">Theme:</span><select id="f-theme" onchange="renderTable()"><option value="all">All</option></select></div>
+    <div class="ctrl-group"><span class="ctrl-label">Signal:</span>
+      <select id="f-signal" onchange="renderTable()"><option value="all">All</option><option value="deep-value">Deep Value</option><option value="value-zone">Value Zone</option><option value="momentum-dip">Momentum Dip</option><option value="trim">Trim</option><option value="extended">Extended</option></select>
+    </div>
+    <div class="ctrl-group"><span class="ctrl-label">Status:</span><select id="f-status" onchange="renderTable()"><option value="all">All</option><option value="holding">Holding</option><option value="watching">Watching</option></select></div>
+    <input type="text" id="f-search" placeholder="Search..." oninput="renderTable()" style="width:110px">
+    <div style="flex:1"></div>
+    <button class="btn btn-sm" onclick="exportCSV()">📥 CSV</button>
+  </div>
+  <div class="table-wrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+</div>
+
+<div class="panel" id="panel-signals"><div id="signals-content"></div></div>
+<div class="panel" id="panel-holdings"><div id="holdings-content"></div></div>
+
+<div class="panel" id="panel-settings">
+  <div class="settings-section">
+    <div class="settings-title">API Keys</div>
+    <div class="settings-row"><label>Polygon.io:</label><input type="password" id="api-polygon" placeholder="Polygon API key" onchange="saveKeys()"><span class="api-status" id="pg-st"></span><button class="btn btn-sm" onclick="testPG()">Test</button></div>
+    <div class="settings-row"><label>Unusual Whales:</label><input type="password" id="api-uw" placeholder="UW API key" onchange="saveKeys()"><span class="api-status" id="uw-st"></span><button class="btn btn-sm" onclick="testUW()">Test</button></div>
+    <p style="font-size:0.72rem;color:var(--text-muted);margin-top:8px">Keys stored in your browser only.</p>
+    <div id="api-test" style="margin-top:8px;font-size:0.75rem"></div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-title">Holdings & Watchlist</div>
+    <p style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:10px">Click ticker to cycle: None → Watching → Holding → None</p>
+    <div id="wl-editor"></div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-title">Data</div>
+    <button class="btn" onclick="if(confirm('Clear all data?')){STATE.stockData={};STATE.lastScan=null;save();renderAll()}">🗑 Clear</button>
+    <button class="btn" onclick="dl('4ir.json',JSON.stringify(STATE,null,2),'application/json')">📤 Export</button>
+    <label class="btn" style="cursor:pointer">📥 Import<input type="file" accept=".json" onchange="importJ(event)" style="display:none"></label>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-ov" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" id="modal-c"></div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// CONFIG
+// ════════════════════════════════════════
+const THEMES=[
+{id:'chips',name:'AI Chips & Accelerators',etf:'SMH',color:'#06b6d4',stocks:[
+{t:'NVDA',n:'NVIDIA'},{t:'AMD',n:'AMD'},{t:'AVGO',n:'Broadcom'},{t:'MRVL',n:'Marvell'},{t:'QCOM',n:'Qualcomm'},{t:'ARM',n:'ARM Holdings'},{t:'INTC',n:'Intel'}]},
+{id:'chipequip',name:'Chip Mfg & Equipment',etf:'SMH',color:'#8b5cf6',stocks:[
+{t:'TSM',n:'TSMC'},{t:'ASML',n:'ASML'},{t:'AMAT',n:'Applied Materials'},{t:'LRCX',n:'Lam Research'},{t:'KLAC',n:'KLA Corp'},{t:'TER',n:'Teradyne'},{t:'AEHR',n:'Aehr Test'},{t:'AXTI',n:'AXT Inc'}]},
+{id:'packaging',name:'Advanced Packaging',etf:'',color:'#ec4899',stocks:[
+{t:'GLW',n:'Corning'},{t:'AMKR',n:'Amkor'},{t:'ONTO',n:'Onto Innovation'},{t:'CAMT',n:'Camtek'},{t:'COHU',n:'Cohu'}]},
+{id:'memory',name:'Memory & Storage',etf:'',color:'#f97316',stocks:[
+{t:'MU',n:'Micron'},{t:'WDC',n:'Western Digital'},{t:'STX',n:'Seagate'},{t:'PSTG',n:'Pure Storage'},{t:'NTAP',n:'NetApp'}]},
+{id:'photonics',name:'Optical & Photonics',etf:'',color:'#eab308',stocks:[
+{t:'COHR',n:'Coherent'},{t:'LITE',n:'Lumentum'},{t:'AAOI',n:'Applied Opto'},{t:'CIEN',n:'Ciena'},{t:'VIAV',n:'VIAV Solutions'},{t:'CALX',n:'Calix'}]},
+{id:'connectors',name:'Connectors & Interconnects',etf:'',color:'#14b8a6',stocks:[
+{t:'APH',n:'Amphenol'},{t:'CRDO',n:'Credo Tech'},{t:'TEL',n:'TE Connectivity'},{t:'BDC',n:'Belden'},{t:'SANM',n:'Sanmina'}]},
+{id:'servers',name:'Servers & Cloud HW',etf:'',color:'#6366f1',stocks:[
+{t:'SMCI',n:'Super Micro'},{t:'CLS',n:'Celestica'},{t:'DELL',n:'Dell'},{t:'HPE',n:'HP Enterprise'},{t:'JBL',n:'Jabil'},{t:'FLEX',n:'Flex'}]},
+{id:'cooling',name:'Thermal & Cooling',etf:'',color:'#0ea5e9',stocks:[
+{t:'VRT',n:'Vertiv'},{t:'MOD',n:'Modine'},{t:'NVT',n:'nVent'},{t:'FIX',n:'Comfort Sys'},{t:'TT',n:'Trane Tech'},{t:'JCI',n:'Johnson Controls'},{t:'CARR',n:'Carrier'}]},
+{id:'powerdist',name:'Power Distribution',etf:'XLI',color:'#f59e0b',stocks:[
+{t:'ETN',n:'Eaton'},{t:'POWL',n:'Powell Ind'},{t:'HUBB',n:'Hubbell'},{t:'EMR',n:'Emerson'},{t:'GEV',n:'GE Vernova'},{t:'ABB',n:'ABB'}]},
+{id:'powergen',name:'Power Generation',etf:'GRID',color:'#22c55e',stocks:[
+{t:'VST',n:'Vistra'},{t:'CEG',n:'Constellation'},{t:'BE',n:'Bloom Energy'},{t:'NNE',n:'Nano Nuclear'},{t:'SMR',n:'NuScale'},{t:'NEE',n:'NextEra'},{t:'FSLR',n:'First Solar'},{t:'ENPH',n:'Enphase'}]},
+{id:'grid',name:'Grid Construction',etf:'PAVE',color:'#a3e635',stocks:[
+{t:'PWR',n:'Quanta'},{t:'STRL',n:'Sterling Infra'},{t:'PRIM',n:'Primoris'},{t:'DY',n:'Dycom'},{t:'MTZ',n:'MasTec'},{t:'J',n:'Jacobs'}]},
+{id:'materials',name:'Critical Materials',etf:'REMX',color:'#d97706',stocks:[
+{t:'FCX',n:'Freeport'},{t:'AA',n:'Alcoa'},{t:'MP',n:'MP Materials'},{t:'SCCO',n:'Southern Copper'},{t:'RIO',n:'Rio Tinto'},{t:'NEM',n:'Newmont'}]},
+{id:'defense',name:'Defense & Autonomous',etf:'ITA',color:'#ef4444',stocks:[
+{t:'PLTR',n:'Palantir'},{t:'LMT',n:'Lockheed'},{t:'RTX',n:'RTX'},{t:'NOC',n:'Northrop'},{t:'JOBY',n:'Joby'},{t:'RKLB',n:'Rocket Lab'},{t:'LHX',n:'L3Harris'},{t:'LDOS',n:'Leidos'}]},
+{id:'robotics',name:'Robotics & Automation',etf:'ROBO',color:'#c084fc',stocks:[
+{t:'ISRG',n:'Intuitive Surg'},{t:'ROK',n:'Rockwell'},{t:'PATH',n:'UiPath'},{t:'CGNX',n:'Cognex'},{t:'BRKS',n:'Brooks Auto'},{t:'NNDM',n:'Nano Dim'}]},
+{id:'quantum',name:'Quantum Computing',etf:'QTUM',color:'#a855f7',stocks:[
+{t:'IONQ',n:'IonQ'},{t:'RGTI',n:'Rigetti'},{t:'QBTS',n:'D-Wave'},{t:'ARQQ',n:'Arqit'},{t:'QUBT',n:'Quantum Comp'}]}
+];
+
+const ALL_STOCKS={}, STOCK_THEME={};
+THEMES.forEach(th=>th.stocks.forEach(s=>{ALL_STOCKS[s.t]=s.n;STOCK_THEME[s.t]=th.id}));
+const TOTAL=Object.keys(ALL_STOCKS).length;
+
+// ════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════
+let STATE={stockData:{},holdStatus:{},lastScan:null};
+let fetchAbort=false;
+let paidPlan=null; // null=unknown, true=paid endpoints work, false=free tier only
+
+function load(){try{const s=localStorage.getItem('4ir-v2');if(s)STATE={...STATE,...JSON.parse(s)}}catch(e){}}
+function save(){try{localStorage.setItem('4ir-v2',JSON.stringify(STATE))}catch(e){}}
+function gk(n){return localStorage.getItem('4ir-'+n)||''}
+function saveKeys(){
+  localStorage.setItem('4ir-polygon',document.getElementById('api-polygon').value.trim());
+  localStorage.setItem('4ir-uw',document.getElementById('api-uw').value.trim());
+  updKeyUI();
+}
+function updKeyUI(){
+  const p=gk('polygon'),u=gk('uw');
+  const ps=document.getElementById('pg-st'),us=document.getElementById('uw-st');
+  ps.className='api-status '+(p?'api-ok':'api-bad');ps.textContent=p?'✓ Set':'✗ Missing';
+  us.className='api-status '+(u?'api-ok':'api-bad');us.textContent=u?'✓ Set':'✗ Missing';
+}
+
+function logMsg(m){
+  const box=document.getElementById('log-box');
+  const ts=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  box.textContent+=`[${ts}] ${m}\n`;
+  box.scrollTop=box.scrollHeight;
+  console.log(m);
+}
+
+// ════════════════════════════════════════
+// API
+// ════════════════════════════════════════
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+
+async function api(url,hdrs={},label=''){
+  for(let attempt=0;attempt<3;attempt++){
+    try{
+      const r=await fetch(url,{headers:hdrs});
+      if(r.status===429){
+        if(label)logMsg(`  ⏳ ${label}: rate limited, waiting 12s...`);
+        await wait(12000);
+        continue;
+      }
+      if(!r.ok){
+        if(label)logMsg(`  ✗ ${label}: HTTP ${r.status}${r.status===403?' (upgrade plan or check key)':''}`);
+        return null;
+      }
+      const j=await r.json();
+      if(j&&j.status==='ERROR'){
+        if(label)logMsg(`  ✗ ${label}: ${j.error||'API error'}`);
+        return null;
+      }
+      return j;
+    }catch(e){
+      if(label)logMsg(`  ✗ ${label}: ${e.message}`);
+      return null;
+    }
+  }
+  return null;
+}
+
+async function fetchPG(ticker){
+  const key=gk('polygon');
+  if(!key)return {};
+  const B='https://api.polygon.io';
+  const d={};
+
+  // AGGREGATES FIRST (works on free tier) — primary data source
+  const today=new Date().toISOString().slice(0,10);
+  const yr=new Date(Date.now()-365*86400000).toISOString().slice(0,10);
+  const ag=await api(`${B}/v2/aggs/ticker/${ticker}/range/1/day/${yr}/${today}?adjusted=true&sort=asc&limit=400&apiKey=${key}`,'',`${ticker} aggs`);
+  if(ag&&ag.results&&ag.results.length>5){
+    const bars=ag.results;
+    const last=bars[bars.length-1];
+    const prev=bars[bars.length-2];
+    // Price from latest bar
+    d.price=last.c;
+    d.todayChg=prev&&prev.c>0?((last.c-prev.c)/prev.c*100):null;
+    d.volume=last.v||null;
+    d.prevVolume=prev?prev.v:null;
+    d.volumeRatio=(d.volume&&d.prevVolume&&d.prevVolume>0)?d.volume/d.prevVolume:null;
+    // 52wk high + performance
+    d.high52=Math.max(...bars.map(b=>b.h));
+    d.distFromHigh=d.high52>0?((last.c-d.high52)/d.high52*100):null;
+    const gc=idx=>idx>=0&&idx<bars.length?bars[idx].c:null;
+    const c5=gc(bars.length-6), c22=gc(bars.length-23), c63=gc(bars.length-64);
+    if(c5)d.chg7d=(last.c-c5)/c5*100;
+    if(c22)d.chg30d=(last.c-c22)/c22*100;
+    if(c63)d.chg90d=(last.c-c63)/c63*100;
+    // Calculate EMAs from bars
+    const closes=bars.map(b=>b.c);
+    for(const w of [10,20,50,200]){
+      if(closes.length>=w){
+        const m=2/(w+1);
+        let ema=closes.slice(0,w).reduce((a,b)=>a+b,0)/w;
+        for(let i=w;i<closes.length;i++) ema=closes[i]*m+ema*(1-m);
+        d['ema'+w]=ema;
+      }
+    }
+    // Calculate RSI from bars (14-period)
+    if(closes.length>=15){
+      let gains=0,losses=0;
+      for(let i=closes.length-14;i<closes.length;i++){
+        const ch=closes[i]-closes[i-1];
+        if(ch>0)gains+=ch; else losses+=Math.abs(ch);
+      }
+      const avgG=gains/14,avgL=losses/14;
+      d.rsi=avgL===0?100:100-(100/(1+avgG/avgL));
+    }
+    logMsg(`  $${d.price.toFixed(2)} rsi=${d.rsi?d.rsi.toFixed(0):'?'} ema50=${d.ema50?'$'+d.ema50.toFixed(0):'?'} offHigh=${d.distFromHigh?d.distFromHigh.toFixed(1)+'%':'?'} 7d=${d.chg7d?d.chg7d.toFixed(1)+'%':'?'}`);
+  } else {
+    logMsg(`  ✗ ${ticker} aggs FAIL — ${ag?.resultsCount||0} bars. Check API key.`);
+    return d;
+  }
+  await wait(120);
+
+  // TRY SNAPSHOT for more accurate intraday price (paid plans only, optional)
+  if(paidPlan!==false){
+    const sn=await api(`https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers/${ticker}?apiKey=${key}`);
+    if(sn&&sn.ticker){
+      if(paidPlan===null){paidPlan=true;logMsg('  ✓ Paid plan detected — using live prices')}
+      const t=sn.ticker;
+      const sp=t.min&&t.min.c?t.min.c:(t.day&&t.day.c?t.day.c:null);
+      if(sp){d.price=sp;d.todayChg=t.todaysChangePerc||d.todayChg}
+      if(t.day&&t.day.v)d.volume=t.day.v;
+      if(t.prevDay&&t.prevDay.v)d.prevVolume=t.prevDay.v;
+      if(d.volume&&d.prevVolume&&d.prevVolume>0)d.volumeRatio=d.volume/d.prevVolume;
+    } else if(paidPlan===null){
+      paidPlan=false;
+      logMsg('  ⓘ Free tier detected — using daily bars for all data (still accurate!)')
+    }
+    await wait(120);
+  }
+
+  // TRY PAID EMAs/RSI for more accuracy (skip on free tier)
+  if(paidPlan===true){
+    for(const w of [10,20,50,200]){
+      const e=await api(`${B}/v1/indicators/ema/${ticker}?timespan=day&window=${w}&series_type=close&order=desc&limit=1&apiKey=${key}`);
+      if(e&&e.results&&e.results.values&&e.results.values[0]) d['ema'+w]=e.results.values[0].value;
+      await wait(120);
+    }
+    const rs=await api(`${B}/v1/indicators/rsi/${ticker}?timespan=day&window=14&series_type=close&order=desc&limit=1&apiKey=${key}`);
+    if(rs&&rs.results&&rs.results.values&&rs.results.values[0]) d.rsi=rs.results.values[0].value;
+    await wait(120);
+  }
+
+  // FINANCIALS
+  const fn=await api(`${B}/vX/reference/financials?ticker=${ticker}&limit=2&sort=period_of_report_date&order=desc&apiKey=${key}`,'',`${ticker} fins`);
+  if(fn&&fn.results&&fn.results.length>=2){
+    const c=fn.results[0],p=fn.results[1];
+    const g=(r,path)=>{try{return path.split('.').reduce((o,k)=>o[k],r.financials)}catch{return null}};
+    const ec=g(c,'income_statement.basic_earnings_per_share.value');
+    const ep=g(p,'income_statement.basic_earnings_per_share.value');
+    const rc=g(c,'income_statement.revenues.value');
+    const rp=g(p,'income_statement.revenues.value');
+    const gp=g(c,'income_statement.gross_profit.value');
+    if(ec!=null&&ep!=null&&ep!==0)d.epsGrowth=(ec-ep)/Math.abs(ep)*100;
+    if(rc!=null&&rp!=null&&rp!==0)d.revGrowth=(rc-rp)/Math.abs(rp)*100;
+    if(gp!=null&&rc!=null&&rc!==0)d.grossMargin=gp/rc*100;
+    logMsg(`  fins: eps=${d.epsGrowth?d.epsGrowth.toFixed(0)+'%':'?'} rev=${d.revGrowth?d.revGrowth.toFixed(0)+'%':'?'} gm=${d.grossMargin?d.grossMargin.toFixed(0)+'%':'?'}`);
+  }
+
+  return d;
+}
+
+async function fetchUWD(ticker){
+  const key=gk('uw');
+  if(!key)return {};
+  const B='https://api.unusualwhales.com/api';
+  const h={'Authorization':'Bearer '+key};
+  const d={};
+
+  // GAMMA
+  const ge=await api(`${B}/stock/${ticker}/greek-exposure`,h,`${ticker} gamma`);
+  if(ge&&ge.data&&ge.data.length>0){
+    const lt=ge.data[ge.data.length-1];
+    const cg=parseFloat(lt.call_gamma)||0, pg=parseFloat(lt.put_gamma)||0;
+    d.netGamma=cg+pg;
+    d.gammaSign=d.netGamma>=0?'pos':'neg';
+    logMsg(`  gamma=${d.gammaSign} (${(d.netGamma/1e6).toFixed(1)}M)`);
+  }
+  await wait(120);
+
+  // PUT/CALL - parse C/P from option_symbol since option_type is null
+  const oc=await api(`${B}/stock/${ticker}/option-contracts?limit=500`,h,`${ticker} options`);
+  if(oc&&oc.data&&oc.data.length>0){
+    let cv=0,pv=0;
+    oc.data.forEach(c=>{
+      const sym=c.option_symbol||'';
+      const vol=parseFloat(c.volume)||0;
+      // Option symbol format: NVDA260304C00180000
+      // Find C or P character between date and strike
+      const match=sym.match(/[CP](?=\d{8}$)/);
+      if(match){
+        if(match[0]==='C')cv+=vol; else pv+=vol;
+      }
+    });
+    if(cv>0){d.pcRatio=pv/cv;logMsg(`  p/c=${d.pcRatio.toFixed(2)} (calls=${cv} puts=${pv})`)}
+    else logMsg(`  ✗ p/c: couldn't parse C/P from ${oc.data.length} contracts`);
+  }
+
+  return d;
+}
+
+async function fetchOne(ticker){
+  if(fetchAbort)return;
+  logMsg(`▸ ${ticker}`);
+  const pg=await fetchPG(ticker);
+  await wait(50);
+  const uw=await fetchUWD(ticker);
+  const merged={...pg,...uw,fetchedAt:Date.now()};
+  // Keep manual fields
+  const old=STATE.stockData[ticker]||{};
+  ['guidanceRaised','earningsBeat','shortInterest'].forEach(k=>{if(old[k]!=null&&merged[k]==null)merged[k]=old[k]});
+  STATE.stockData[ticker]=merged;
+  save();
+  logMsg(`  ✅ ${ticker} price=${merged.price?'$'+merged.price.toFixed(2):'NONE'}\n`);
+}
+
+async function scanAll(){
+  fetchAbort=false;
+  paidPlan=null; // reset plan detection
+  let done=0;
+  const bar=document.getElementById('pbar'),fill=document.getElementById('pfill'),st=document.getElementById('fetch-status');
+  bar.style.display='block';
+  document.getElementById('log-box').classList.add('show');
+  logMsg('══════ SCAN START ══════');
+  const pgKey=gk('polygon'), uwKey=gk('uw');
+  logMsg(`Polygon: ${pgKey?'✓ key set':'✗ MISSING — go to Settings'}  UW: ${uwKey?'✓ key set':'✗ MISSING — go to Settings'}`);
+  logMsg(`Stocks: ${TOTAL}\n`);
+
+  // Quick API validation
+  if(pgKey){
+    logMsg('Testing Polygon API...');
+    const test=await api(`https://api.polygon.io/v2/aggs/ticker/AAPL/range/1/day/2025-01-01/2025-01-10?adjusted=true&sort=asc&limit=5&apiKey=${pgKey}`,'','API test');
+    if(test&&test.results){logMsg(`✓ Polygon API working (${test.results.length} bars)\n`)}
+    else{logMsg('✗ Polygon API FAILED — check your key in Settings\n');st.textContent='API Error';bar.style.display='none';return}
+  } else {
+    logMsg('✗ No Polygon key — add it in Settings tab\n');st.textContent='No API Key';bar.style.display='none';return;
+  }
+
+  for(const theme of THEMES){
+    logMsg(`── ${theme.name} ──`);
+    for(const s of theme.stocks){
+      if(fetchAbort){st.textContent='Stopped';bar.style.display='none';renderAll();return}
+      st.textContent=`${s.t} (${done+1}/${TOTAL})`;
+      fill.style.width=((done/TOTAL)*100)+'%';
+      await fetchOne(s.t);
+      done++;
+      if(done%3===0){renderThemes();renderHdrStats()}
+    }
+  }
+  STATE.lastScan=Date.now();save();
+  fill.style.width='100%';
+  let loaded=0,failed=[];
+  Object.keys(ALL_STOCKS).forEach(t=>{
+    if(STATE.stockData[t]&&STATE.stockData[t].price)loaded++;
+    else failed.push(t);
+  });
+  logMsg(`\n══════ DONE: ${loaded}/${TOTAL} with price data ══════`);
+  if(failed.length>0&&failed.length<20)logMsg(`Missing: ${failed.join(', ')}`);
+  if(loaded===0)logMsg('⚠ NO DATA LOADED — check API key and plan tier');
+  st.textContent=`Done: ${loaded}/${TOTAL}`;
+  setTimeout(()=>bar.style.display='none',3000);
+  renderAll();
+}
+
+// TEST
+async function testPG(){
+  const el=document.getElementById('api-test');
+  const key=gk('polygon');
+  if(!key){el.innerHTML='<span class="neg">Enter key first</span>';return}
+  el.textContent='Testing...';
+  const r=await api(`https://api.polygon.io/v2/snapshot/locale/us/markets/stocks/tickers/AAPL?apiKey=${key}`);
+  if(r&&r.ticker){
+    const p=r.ticker.min&&r.ticker.min.c?r.ticker.min.c:(r.ticker.day?r.ticker.day.c:null);
+    el.innerHTML=`<span class="pos">✓ Polygon OK — AAPL $${p?p.toFixed(2):'?'}</span>`;
+  }else el.innerHTML='<span class="neg">✗ Failed</span>';
+}
+async function testUW(){
+  const el=document.getElementById('api-test');
+  const key=gk('uw');
+  if(!key){el.innerHTML='<span class="neg">Enter key first</span>';return}
+  el.textContent='Testing...';
+  const r=await api(`https://api.unusualwhales.com/api/stock/AAPL/greek-exposure`,{'Authorization':'Bearer '+key});
+  if(r&&r.data&&r.data.length>0) el.innerHTML=`<span class="pos">✓ UW OK — ${r.data.length} records</span>`;
+  else el.innerHTML='<span class="neg">✗ Failed</span>';
+}
+
+// ════════════════════════════════════════
+// SCORING
+// ════════════════════════════════════════
+function score(ticker){
+  const d=STATE.stockData[ticker]||{};
+  let ent=0,fun=0,flo=0;
+  const R={entry:[],fundamental:[],flow:[]};
+
+  if(d.price&&d.ema200&&d.price<d.ema200){ent++;R.entry.push('Below 200 EMA')}
+  if(d.price&&d.ema50&&d.price<d.ema50){ent++;R.entry.push('Below 50 EMA')}
+  if(d.rsi!=null){if(d.rsi<30){ent+=2;R.entry.push('RSI<30')}else if(d.rsi<40){ent++;R.entry.push('RSI<40')}}
+  if(d.distFromHigh!=null){if(d.distFromHigh<-30){ent+=2;R.entry.push('>30% off high')}else if(d.distFromHigh<-20){ent++;R.entry.push('>20% off high')}}
+  if(d.chg7d!=null&&d.chg7d<-5){ent++;R.entry.push('7d dip')}
+  if(d.volumeRatio&&d.volumeRatio>1.5){ent++;R.entry.push('Vol spike')}
+  if(d.price&&d.ema50&&d.ema10&&d.ema20&&d.price>d.ema50&&(d.price<=d.ema10*1.02||d.price<=d.ema20*1.02)){ent++;R.entry.push('EMA pullback')}
+  ent=Math.min(10,ent);
+
+  if(d.epsGrowth!=null){if(d.epsGrowth>30){fun+=2;R.fundamental.push('EPS>30%')}else if(d.epsGrowth>15){fun++;R.fundamental.push('EPS>15%')}}
+  if(d.revGrowth!=null){if(d.revGrowth>25){fun+=2;R.fundamental.push('Rev>25%')}else if(d.revGrowth>10){fun++;R.fundamental.push('Rev>10%')}}
+  if(d.grossMargin!=null){if(d.grossMargin>60){fun+=2;R.fundamental.push('GM>60%')}else if(d.grossMargin>40){fun++;R.fundamental.push('GM>40%')}}
+  if(d.guidanceRaised){fun+=2;R.fundamental.push('Guidance↑')}
+  if(d.earningsBeat){fun++;R.fundamental.push('Beat')}
+  fun=Math.min(10,fun);
+
+  if(d.pcRatio!=null&&d.pcRatio<0.7){flo++;R.flow.push('Bull P/C')}
+  if(d.pcRatio!=null&&d.pcRatio>1.2&&ent>=5){flo++;R.flow.push('Contrarian P/C')}
+  if(d.gammaSign==='neg'&&ent>=5){flo++;R.flow.push('γ− volatile')}
+  if(d.gammaSign==='pos'&&ent<5){flo++;R.flow.push('γ+ stable')}
+  if(d.volumeRatio&&d.volumeRatio>1.5){flo++;R.flow.push('High vol')}
+  flo=Math.min(5,flo);
+
+  const conv=ent+fun+flo;
+  let sig='none';
+  if(ent>=7&&fun>=6)sig='deep-value';
+  else if(ent>=5&&fun>=4)sig='value-zone';
+  else if(d.price&&d.ema50&&d.price>d.ema50&&d.rsi!=null&&d.rsi<45&&d.rsi>30)sig='momentum-dip';
+  if(d.rsi!=null&&d.rsi>70&&d.distFromHigh!=null&&d.distFromHigh>-5)sig='trim';
+  if(d.chg90d!=null&&d.chg90d>50&&d.rsi!=null&&d.rsi>65)sig='trim';
+  if(d.rsi!=null&&d.rsi>78)sig='extended';
+
+  return{entry:ent,fundamental:fun,flow:flo,conviction:conv,signal:sig,reasons:R};
+}
+const SL=s=>({'deep-value':'DEEP VALUE','value-zone':'VALUE ZONE','momentum-dip':'MOM DIP','trim':'TRIM','extended':'EXTENDED','none':'—'}[s]||s);
+const SC=s=>({'deep-value':'badge-dvz','value-zone':'badge-vz','momentum-dip':'badge-mom','trim':'badge-trim','extended':'badge-trim','none':'badge-neutral'}[s]||'');
+const CC=c=>c>=16?'conv-hi':c>=10?'conv-md':'conv-lo';
+
+// ════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════
+function renderAll(){renderThemes();renderTable();renderSignals();renderHoldings();renderHdrStats();renderWL()}
+function renderHdrStats(){
+  document.getElementById('hdr-total').textContent=TOTAL;
+  let vz=0,tr=0,ld=0;
+  Object.keys(ALL_STOCKS).forEach(t=>{
+    const s=score(t);
+    if(s.signal==='deep-value'||s.signal==='value-zone')vz++;
+    if(s.signal==='trim'||s.signal==='extended')tr++;
+    if(STATE.stockData[t]&&STATE.stockData[t].price)ld++;
+  });
+  document.getElementById('hdr-vz').textContent=vz;
+  document.getElementById('hdr-trim').textContent=tr;
+  document.getElementById('hdr-loaded').textContent=ld;
+  if(STATE.lastScan){const d=new Date(STATE.lastScan);document.getElementById('hdr-updated').textContent=d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
+}
+
+function renderThemes(){
+  const grid=document.getElementById('theme-grid');
+  const sb=document.getElementById('theme-sort').value;
+  let td=THEMES.map(th=>{
+    let s7=0,s30=0,c7=0,c30=0,vz=0,tr=0,mo=0,ld=0;
+    th.stocks.forEach(s=>{
+      const d=STATE.stockData[s.t]||{};const sc=score(s.t);
+      if(d.chg7d!=null){s7+=d.chg7d;c7++}
+      if(d.chg30d!=null){s30+=d.chg30d;c30++}
+      if(sc.signal==='deep-value'||sc.signal==='value-zone')vz++;
+      if(sc.signal==='trim'||sc.signal==='extended')tr++;
+      if(sc.signal==='momentum-dip')mo++;
+      if(d.price)ld++;
+    });
+    return{...th,a7:c7?s7/c7:null,a30:c30?s30/c30:null,vz,tr,mo,ts:vz+tr+mo,ld};
+  });
+  if(sb==='perf7d')td.sort((a,b)=>(b.a7||-999)-(a.a7||-999));
+  else if(sb==='perf30d')td.sort((a,b)=>(b.a30||-999)-(a.a30||-999));
+  else if(sb==='signals')td.sort((a,b)=>b.ts-a.ts);
+
+  grid.innerHTML=td.map(th=>{
+    const tc=th.a7==null?'neutral':th.a7>2?'hot':th.a7>-2?'warm':'cold';
+    const f=v=>v==null?'—':(v>=0?'+':'')+v.toFixed(1)+'%';
+    const fc=v=>v==null?'':v>=0?'color:var(--green)':'color:var(--red)';
+    let sg='';
+    if(th.vz)sg+=`<span class="tc-signal vz">${th.vz} VALUE</span>`;
+    if(th.mo)sg+=`<span class="tc-signal momentum">${th.mo} MOM</span>`;
+    if(th.tr)sg+=`<span class="tc-signal trim">${th.tr} TRIM</span>`;
+    return`<div class="theme-card ${tc} fade-in" onclick="filterByTheme('${th.id}')" style="border-left:3px solid ${th.color}">
+      <div class="tc-name">${th.name}<span class="tc-count">${th.ld}/${th.stocks.length}</span></div>
+      <div class="tc-metrics">
+        <div class="tc-metric"><span class="tc-metric-label">7-Day</span><span class="tc-metric-val" style="${fc(th.a7)}">${f(th.a7)}</span></div>
+        <div class="tc-metric"><span class="tc-metric-label">30-Day</span><span class="tc-metric-val" style="${fc(th.a30)}">${f(th.a30)}</span></div>
+      </div>${sg?`<div class="tc-signals">${sg}</div>`:''}</div>`;
+  }).join('');
+}
+
+function filterByTheme(id){switchTab('scanner');document.getElementById('f-theme').value=id;renderTable()}
+
+let sortCol='conviction',sortDir='desc';
+function renderTable(){
+  const ft=document.getElementById('f-theme').value;
+  const fs=document.getElementById('f-signal').value;
+  const fst=document.getElementById('f-status').value;
+  const fq=document.getElementById('f-search').value.toUpperCase();
+  const sel=document.getElementById('f-theme');
+  if(sel.options.length<=1)THEMES.forEach(th=>{const o=document.createElement('option');o.value=th.id;o.textContent=th.name;sel.appendChild(o)});
+
+  const cols=[{k:'ticker',l:'Ticker'},{k:'theme',l:'Theme'},{k:'status',l:'St'},{k:'price',l:'Price'},{k:'todayChg',l:'Today'},{k:'chg7d',l:'7D'},{k:'chg30d',l:'30D'},{k:'chg90d',l:'90D'},{k:'rsi',l:'RSI'},{k:'distFromHigh',l:'Off Hi'},{k:'entry',l:'Ent'},{k:'fundamental',l:'Fun'},{k:'flow',l:'Flo'},{k:'conviction',l:'Conv'},{k:'signal',l:'Signal'},{k:'pcRatio',l:'P/C'},{k:'gammaSign',l:'γ'}];
+  document.getElementById('thead').innerHTML='<tr>'+cols.map(c=>`<th class="${sortCol===c.k?(sortDir==='asc'?'sorted-asc':'sorted-desc'):''}" onclick="doSort('${c.k}')">${c.l}</th>`).join('')+'</tr>';
+
+  let rows=[];
+  THEMES.forEach(th=>th.stocks.forEach(s=>{
+    const d=STATE.stockData[s.t]||{};const sc=score(s.t);const st=STATE.holdStatus[s.t]||'none';
+    if(ft!=='all'&&th.id!==ft)return;if(fs!=='all'&&sc.signal!==fs)return;
+    if(fst!=='all'&&st!==fst)return;if(fq&&!s.t.includes(fq)&&!s.n.toUpperCase().includes(fq))return;
+    rows.push({ticker:s.t,name:s.n,theme:th,data:d,scores:sc,status:st});
+  }));
+
+  rows.sort((a,b)=>{
+    let va,vb;
+    if(['entry','fundamental','flow','conviction'].includes(sortCol)){va=a.scores[sortCol];vb=b.scores[sortCol]}
+    else if(sortCol==='signal'){const o={'deep-value':5,'value-zone':4,'momentum-dip':3,'trim':2,'extended':1,'none':0};va=o[a.scores.signal]||0;vb=o[b.scores.signal]||0}
+    else if(sortCol==='ticker'){va=a.ticker;vb=b.ticker}
+    else if(sortCol==='theme'){va=a.theme.name;vb=b.theme.name}
+    else if(sortCol==='status'){const o={holding:2,watching:1,none:0};va=o[a.status]||0;vb=o[b.status]||0}
+    else{va=a.data[sortCol];vb=b.data[sortCol]}
+    if(va==null)va=-99999;if(vb==null)vb=-99999;
+    if(typeof va==='string')return sortDir==='asc'?va.localeCompare(vb):vb.localeCompare(va);
+    return sortDir==='asc'?va-vb:vb-va;
+  });
+
+  const fm=(v,dc=1)=>v==null?'—':v.toFixed(dc);
+  const fp=v=>v==null?'—':(v>=0?'+':'')+v.toFixed(1)+'%';
+  const pc=v=>v==null?'':v>=0?'pos':'neg';
+
+  document.getElementById('tbody').innerHTML=rows.map(r=>{
+    const d=r.data,sc=r.scores;
+    const rc=sc.signal==='deep-value'||sc.signal==='value-zone'?'row-vz':sc.signal==='trim'||sc.signal==='extended'?'row-trim':sc.signal==='momentum-dip'?'row-mom':'';
+    const sb=r.status==='holding'?'<span class="badge badge-hold">H</span>':r.status==='watching'?'<span class="badge badge-watch">W</span>':'';
+    const gd=d.gammaSign==='pos'?'<span class="pos">γ+</span>':d.gammaSign==='neg'?'<span class="neg">γ−</span>':'—';
+    return`<tr class="${rc}">
+      <td><span class="ticker-cell" onclick="openModal('${r.ticker}')">${r.ticker}</span><br><span class="stock-name">${r.name}</span></td>
+      <td style="color:${r.theme.color};font-family:Outfit;font-size:0.68rem">${r.theme.name.split('&')[0].split(' ').slice(0,2).join(' ')}</td>
+      <td>${sb}</td>
+      <td>${d.price?'$'+fm(d.price,2):'—'}</td>
+      <td class="${pc(d.todayChg)}">${fp(d.todayChg)}</td>
+      <td class="${pc(d.chg7d)}">${fp(d.chg7d)}</td>
+      <td class="${pc(d.chg30d)}">${fp(d.chg30d)}</td>
+      <td class="${pc(d.chg90d)}">${fp(d.chg90d)}</td>
+      <td style="${d.rsi!=null&&d.rsi<30?'color:var(--green)':d.rsi!=null&&d.rsi>70?'color:var(--red)':''}">${fm(d.rsi,0)}</td>
+      <td class="${d.distFromHigh!=null&&d.distFromHigh<-20?'neg':''}">${fp(d.distFromHigh)}</td>
+      <td style="color:${sc.entry>=7?'var(--green)':sc.entry>=4?'var(--amber)':'var(--text-muted)'}">${sc.entry}</td>
+      <td style="color:${sc.fundamental>=7?'var(--green)':sc.fundamental>=4?'var(--amber)':'var(--text-muted)'}">${sc.fundamental}</td>
+      <td style="color:${sc.flow>=3?'var(--green)':sc.flow>=2?'var(--amber)':'var(--text-muted)'}">${sc.flow}</td>
+      <td><span class="conv ${CC(sc.conviction)}">${sc.conviction}</span></td>
+      <td><span class="badge ${SC(sc.signal)}">${SL(sc.signal)}</span></td>
+      <td style="${d.pcRatio!=null&&d.pcRatio<0.7?'color:var(--green)':d.pcRatio!=null&&d.pcRatio>1.2?'color:var(--red)':''}">${d.pcRatio!=null?d.pcRatio.toFixed(2):'—'}</td>
+      <td>${gd}</td></tr>`;
+  }).join('');
+}
+function doSort(col){if(sortCol===col)sortDir=sortDir==='asc'?'desc':'asc';else{sortCol=col;sortDir='desc'}renderTable()}
+
+function renderSignals(){
+  const sigs={'deep-value':[],'value-zone':[],'momentum-dip':[],'trim':[],'extended':[]};
+  THEMES.forEach(th=>th.stocks.forEach(s=>{
+    const sc=score(s.t);const d=STATE.stockData[s.t]||{};
+    if(sc.signal!=='none')sigs[sc.signal].push({ticker:s.t,name:s.n,theme:th,scores:sc,data:d});
+  }));
+  Object.values(sigs).forEach(a=>a.sort((a,b)=>b.scores.conviction-a.scores.conviction));
+
+  const sec=(title,dot,items,icon)=>`<div class="signal-section">
+    <div class="signal-title"><span class="dot" style="background:${dot}"></span>${icon} ${title} (${items.length})</div>
+    ${!items.length?'<p style="color:var(--text-muted);font-size:0.8rem">None</p>':
+    `<div class="signal-cards">${items.map(i=>`
+      <div class="signal-card" onclick="openModal('${i.ticker}')" style="border-left:3px solid ${dot}">
+        <div class="signal-card-ticker">${i.ticker}</div>
+        <div class="signal-card-info">
+          <div style="font-size:0.8rem;font-weight:600">${i.name}</div>
+          <div class="signal-card-reason">${i.scores.reasons.entry.concat(i.scores.reasons.fundamental).slice(0,3).join(' · ')||'—'}</div>
+          <div style="display:flex;gap:8px;font-family:JetBrains Mono;font-size:0.75rem;margin-top:2px">
+            <span style="color:var(--accent)">E:${i.scores.entry}</span>
+            <span style="color:var(--amber)">F:${i.scores.fundamental}</span>
+            <span style="color:var(--blue)">Fl:${i.scores.flow}</span>
+            <span style="font-weight:700">=${i.scores.conviction}/25</span>
+          </div>
+        </div>
+        <div style="text-align:right;font-family:JetBrains Mono;font-size:0.8rem">
+          <div>${i.data.price?'$'+i.data.price.toFixed(2):'—'}</div>
+          <div class="${(i.data.chg7d||0)>=0?'pos':'neg'}" style="font-size:0.7rem">${i.data.chg7d!=null?(i.data.chg7d>=0?'+':'')+i.data.chg7d.toFixed(1)+'%':''}</div>
+        </div>
+      </div>`).join('')}</div>`}</div>`;
+
+  document.getElementById('signals-content').innerHTML=
+    sec('Deep Value — Strong Fundamentals + Oversold','#10b981',sigs['deep-value'],'💎')+
+    sec('Value Zone — Entry Approaching','#22d3ee',sigs['value-zone'],'🎯')+
+    sec('Momentum Dip — Uptrend Pullback','#3b82f6',sigs['momentum-dip'],'📉')+
+    sec('Trim — Take Profits','#ef4444',sigs['trim'],'✂️')+
+    sec('Extended — Overbought','#f97316',sigs['extended'],'🔥');
+}
+
+function renderHoldings(){
+  const hs=[],ws=[];
+  THEMES.forEach(th=>th.stocks.forEach(s=>{
+    const st=STATE.holdStatus[s.t];const d=STATE.stockData[s.t]||{};const sc=score(s.t);
+    const it={ticker:s.t,name:s.n,theme:th,data:d,scores:sc};
+    if(st==='holding')hs.push(it);if(st==='watching')ws.push(it);
+  }));
+  const rl=items=>!items.length?'<p style="color:var(--text-muted);font-size:0.8rem">Use Settings to mark stocks.</p>':
+    `<div class="signal-cards">${items.map(i=>`
+      <div class="signal-card" onclick="openModal('${i.ticker}')" style="border-left:3px solid ${i.theme.color}">
+        <div class="signal-card-ticker">${i.ticker}</div>
+        <div class="signal-card-info">
+          <div style="font-size:0.8rem;font-weight:600">${i.name} <span style="font-size:0.65rem;color:var(--text-muted)">${i.theme.name}</span></div>
+          <div style="display:flex;gap:6px;margin-top:4px;align-items:center">
+            <span class="badge ${SC(i.scores.signal)}">${SL(i.scores.signal)}</span>
+            ${i.data.price?`<span style="font-family:JetBrains Mono;font-size:0.75rem">$${i.data.price.toFixed(2)}</span>`:''}
+            ${i.data.chg7d!=null?`<span class="${i.data.chg7d>=0?'pos':'neg'}" style="font-family:JetBrains Mono;font-size:0.72rem">${i.data.chg7d>=0?'+':''}${i.data.chg7d.toFixed(1)}%</span>`:''}
+          </div>
+        </div>
+        <span class="conv ${CC(i.scores.conviction)}">${i.scores.conviction}</span>
+      </div>`).join('')}</div>`;
+  document.getElementById('holdings-content').innerHTML=
+    `<div class="signal-section"><div class="signal-title"><span class="dot" style="background:var(--green)"></span>◆ Holdings (${hs.length})</div>${rl(hs)}</div>`+
+    `<div class="signal-section"><div class="signal-title"><span class="dot" style="background:var(--amber)"></span>◇ Watching (${ws.length})</div>${rl(ws)}</div>`;
+}
+
+function renderWL(){
+  const el=document.getElementById('wl-editor');if(!el)return;
+  el.innerHTML=THEMES.map(th=>`<div style="margin-bottom:12px">
+    <div style="font-size:0.78rem;font-weight:600;color:${th.color};margin-bottom:4px">${th.name}</div>
+    <div class="wl-chips">${th.stocks.map(s=>{
+      const st=STATE.holdStatus[s.t]||'none';
+      return`<span class="wl-chip ${st}" onclick="cyc('${s.t}')" title="${s.n}">${s.t}</span>`;
+    }).join('')}</div></div>`).join('');
+}
+function cyc(t){
+  const c=STATE.holdStatus[t]||'none';
+  const n=c==='none'?'watching':c==='watching'?'holding':'none';
+  if(n==='none')delete STATE.holdStatus[t];else STATE.holdStatus[t]=n;
+  save();renderWL();renderHoldings();renderTable();
+}
+
+// MODAL
+function openModal(ticker){
+  const d=STATE.stockData[ticker]||{};const sc=score(ticker);
+  const theme=THEMES.find(t=>t.stocks.some(s=>s.t===ticker));
+  const name=ALL_STOCKS[ticker]||ticker;
+  const fm=(v,dc=1)=>v==null?'—':v.toFixed(dc);
+  const fp=v=>v==null?'—':(v>=0?'+':'')+v.toFixed(1)+'%';
+  const ps=v=>v==null?'':v>=0?'color:var(--green)':'color:var(--red)';
+  const st=STATE.holdStatus[ticker]||'none';
+
+  document.getElementById('modal-c').innerHTML=`
+    <button class="modal-close" onclick="document.getElementById('modal-ov').classList.remove('open')">&times;</button>
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;flex-wrap:wrap">
+      <div><div class="modal-ticker">${ticker}</div><div class="modal-name">${name} · <span style="color:${theme?.color||'#888'}">${theme?.name||''}</span></div></div>
+      <div style="margin-left:auto;text-align:right">
+        <div style="font-size:1.6rem;font-weight:700;font-family:JetBrains Mono">${d.price?'$'+fm(d.price,2):'No data yet'}</div>
+        <div style="${ps(d.todayChg)};font-family:JetBrains Mono">${fp(d.todayChg)} today</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      <span class="badge ${SC(sc.signal)}" style="font-size:0.8rem;padding:4px 10px">${SL(sc.signal)}</span>
+      <span class="conv ${CC(sc.conviction)}" style="font-size:0.9rem">CONVICTION: ${sc.conviction}/25</span>
+      <button class="btn btn-sm" onclick="cyc('${ticker}');openModal('${ticker}')">${st==='holding'?'◆ HOLDING':st==='watching'?'◇ WATCHING':'○ NOT TRACKED'}</button>
+    </div>
+    <div class="modal-grid">
+      <div class="modal-section"><div class="modal-section-title">📊 Entry: ${sc.entry}/10</div>
+        ${sc.reasons.entry.map(r=>`<div class="modal-row"><span class="modal-row-label">✓ ${r}</span></div>`).join('')||'<div class="modal-row"><span class="modal-row-label" style="color:var(--text-muted)">No signals</span></div>'}</div>
+      <div class="modal-section"><div class="modal-section-title">💰 Fundamental: ${sc.fundamental}/10</div>
+        ${sc.reasons.fundamental.map(r=>`<div class="modal-row"><span class="modal-row-label">✓ ${r}</span></div>`).join('')||'<div class="modal-row"><span class="modal-row-label" style="color:var(--text-muted)">No data</span></div>'}</div>
+      <div class="modal-section"><div class="modal-section-title">🌊 Flow: ${sc.flow}/5</div>
+        ${sc.reasons.flow.map(r=>`<div class="modal-row"><span class="modal-row-label">✓ ${r}</span></div>`).join('')||'<div class="modal-row"><span class="modal-row-label" style="color:var(--text-muted)">No data</span></div>'}</div>
+    </div>
+    <div class="modal-grid" style="margin-top:12px">
+      <div class="modal-section"><div class="modal-section-title">Technicals</div>
+        <div class="modal-row"><span class="modal-row-label">Price</span><span class="modal-row-val">${d.price?'$'+fm(d.price,2):'—'}</span></div>
+        <div class="modal-row"><span class="modal-row-label">EMA 10</span><span class="modal-row-val">${d.ema10?'$'+fm(d.ema10,2):'—'}</span></div>
+        <div class="modal-row"><span class="modal-row-label">EMA 20</span><span class="modal-row-val">${d.ema20?'$'+fm(d.ema20,2):'—'}</span></div>
+        <div class="modal-row"><span class="modal-row-label">EMA 50</span><span class="modal-row-val">${d.ema50?'$'+fm(d.ema50,2):'—'}</span></div>
+        <div class="modal-row"><span class="modal-row-label">EMA 200</span><span class="modal-row-val">${d.ema200?'$'+fm(d.ema200,2):'—'}</span></div>
+        <div class="modal-row"><span class="modal-row-label">RSI</span><span class="modal-row-val" style="${d.rsi!=null&&d.rsi<30?'color:var(--green)':d.rsi!=null&&d.rsi>70?'color:var(--red)':''}">${fm(d.rsi,0)}</span></div>
+        <div class="modal-row"><span class="modal-row-label">52wk High</span><span class="modal-row-val">${d.high52?'$'+fm(d.high52,2):'—'}</span></div>
+        <div class="modal-row"><span class="modal-row-label">Off High</span><span class="modal-row-val" style="${ps(d.distFromHigh)}">${fp(d.distFromHigh)}</span></div>
+      </div>
+      <div class="modal-section"><div class="modal-section-title">Performance</div>
+        <div class="modal-row"><span class="modal-row-label">Today</span><span class="modal-row-val" style="${ps(d.todayChg)}">${fp(d.todayChg)}</span></div>
+        <div class="modal-row"><span class="modal-row-label">7 Day</span><span class="modal-row-val" style="${ps(d.chg7d)}">${fp(d.chg7d)}</span></div>
+        <div class="modal-row"><span class="modal-row-label">30 Day</span><span class="modal-row-val" style="${ps(d.chg30d)}">${fp(d.chg30d)}</span></div>
+        <div class="modal-row"><span class="modal-row-label">90 Day</span><span class="modal-row-val" style="${ps(d.chg90d)}">${fp(d.chg90d)}</span></div>
+        <div class="modal-row"><span class="modal-row-label">Vol Ratio</span><span class="modal-row-val">${d.volumeRatio?d.volumeRatio.toFixed(2)+'x':'—'}</span></div>
+      </div>
+      <div class="modal-section"><div class="modal-section-title">Fundamentals & Flow</div>
+        <div class="modal-row"><span class="modal-row-label">EPS Growth</span><span class="modal-row-val" style="${ps(d.epsGrowth)}">${fp(d.epsGrowth)}</span></div>
+        <div class="modal-row"><span class="modal-row-label">Rev Growth</span><span class="modal-row-val" style="${ps(d.revGrowth)}">${fp(d.revGrowth)}</span></div>
+        <div class="modal-row"><span class="modal-row-label">Gross Margin</span><span class="modal-row-val">${d.grossMargin?d.grossMargin.toFixed(1)+'%':'—'}</span></div>
+        <div class="modal-row"><span class="modal-row-label">Put/Call</span><span class="modal-row-val" style="${d.pcRatio!=null&&d.pcRatio<0.7?'color:var(--green)':d.pcRatio!=null&&d.pcRatio>1.2?'color:var(--red)':''}">${d.pcRatio!=null?d.pcRatio.toFixed(2):'—'}</span></div>
+        <div class="modal-row"><span class="modal-row-label">Gamma</span><span class="modal-row-val">${d.gammaSign==='pos'?'<span class="pos">γ+ Positive</span>':d.gammaSign==='neg'?'<span class="neg">γ− Negative</span>':'—'}</span></div>
+        <div class="modal-row"><span class="modal-row-label">Guidance</span><span class="modal-row-val">${d.guidanceRaised?'✅':'—'} <button class="btn btn-sm" onclick="tog('${ticker}','guidanceRaised');openModal('${ticker}')">toggle</button></span></div>
+        <div class="modal-row"><span class="modal-row-label">Earnings Beat</span><span class="modal-row-val">${d.earningsBeat?'✅':'—'} <button class="btn btn-sm" onclick="tog('${ticker}','earningsBeat');openModal('${ticker}')">toggle</button></span></div>
+      </div>
+    </div>
+    ${d.fetchedAt?`<div style="margin-top:12px;font-size:0.65rem;color:var(--text-muted)">Fetched: ${new Date(d.fetchedAt).toLocaleString()}</div>`:''}
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-accent btn-sm" onclick="fetchOne('${ticker}').then(()=>{renderAll();openModal('${ticker}')})">⟳ Refresh</button>
+      <a href="https://finance.yahoo.com/quote/${ticker}" target="_blank" class="btn btn-sm">Yahoo ↗</a>
+      <a href="https://unusualwhales.com/stock/${ticker}" target="_blank" class="btn btn-sm">UW ↗</a>
+      <a href="https://www.tradingview.com/symbols/${ticker}/" target="_blank" class="btn btn-sm">TV ↗</a>
+    </div>`;
+  document.getElementById('modal-ov').classList.add('open');
+}
+function tog(t,f){if(!STATE.stockData[t])STATE.stockData[t]={};STATE.stockData[t][f]=!STATE.stockData[t][f];save();renderAll()}
+
+// UTIL
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+tab));
+  if(tab==='scanner')renderTable();if(tab==='signals')renderSignals();if(tab==='holdings')renderHoldings();
+  if(tab==='settings'){renderWL();updKeyUI()}
+}
+function exportCSV(){
+  let c='Ticker,Name,Theme,Status,Price,Today,7D,30D,90D,RSI,OffHi,Entry,Fund,Flow,Conv,Signal,PC,Gamma\n';
+  THEMES.forEach(th=>th.stocks.forEach(s=>{const d=STATE.stockData[s.t]||{};const sc=score(s.t);
+    c+=`${s.t},"${s.n}","${th.name}",${STATE.holdStatus[s.t]||''},${d.price||''},${d.todayChg||''},${d.chg7d||''},${d.chg30d||''},${d.chg90d||''},${d.rsi||''},${d.distFromHigh||''},${sc.entry},${sc.fundamental},${sc.flow},${sc.conviction},${sc.signal},${d.pcRatio||''},${d.gammaSign||''}\n`}));
+  dl('4ir-export.csv',c,'text/csv');
+}
+function dl(n,c,t){const b=new Blob([c],{type:t});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=n;a.click()}
+function importJ(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=ev=>{try{STATE={...STATE,...JSON.parse(ev.target.result)};save();renderAll();alert('Imported!')}catch{alert('Invalid')}};r.readAsText(f)}
+
+// INIT
+load();
+// Clear any old version data
+try{localStorage.removeItem('4ir-state')}catch(e){}
+document.getElementById('api-polygon').value=gk('polygon');
+document.getElementById('api-uw').value=gk('uw');
+updKeyUI();renderAll();
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('modal-ov').classList.remove('open')});
+</script>
+</body>
+</html>
